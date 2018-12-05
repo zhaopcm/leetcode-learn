@@ -1,0 +1,50 @@
+--------------------------------------------question----------------------------------------------------------
+Given an array of integers, return indices of the two numbers such that they add up to a specific target.
+
+You may assume that each input would have exactly one solution, and you may not use the same element twice.
+
+Example:
+
+Given nums = [2, 7, 11, 15], target = 9,
+
+Because nums[0] + nums[1] = 2 + 7 = 9,
+return [0, 1].
+
+给一个整形数组 nums = [2, 7, 11, 15]，一个目标值target=9。在数组中找到唯一的两个数相加为哦target,并作为数组返回。
+
+-------------------------------------------solution-------------------------------------------------------------
+// 因为是刷的第一道题能想到的暴力解法太暴力了，没有什么价值，于是在discussion中发现了一个通过map建立hash表的方法，通过hash
+表时间复杂度控制在O（n）,比起两个for循环好很多。
+class Solution {
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        unordered_map<int, int> map;  // key = desired number, value = paired index
+        for (int i = 0; i < nums.size(); i++) {
+            int val = nums[i];
+            
+            // Try to find the current value in the hashmap.
+            auto iter = map.find(val);
+            if (iter != map.end()) {
+                // Found! Return the previously-stored index and current index.
+                return vector<int> {iter->second, i};
+            }
+            
+            // Didn't find an answer. Store the current index at "target - val".
+            // That way we'll know that we have an answer as soon as we come across
+            // the other part of the desired sum. E.g., if target == 12 and we
+            // found a 7 here at index 2, store the index 2 in the map at key
+            // 12 - 7 = 5.  Then later when we find a "5" we're done.
+            map[target - val] = i;
+        }
+    }
+};
+
+---------------------------------------analyse--------------------------------------------------------------------
+分析：
+    首先通过方法中函数的构建可以看出返回的是一个动态数组vector，函数的参数也是一个可变长动态数组vector nums，和整形变量 targrt。
+在函数中先建立一个unorder_map，即一个哈希表。便于在取到数组中的值然后在哈希表中寻找看是否有满足taget的pair并返回。
+
+
+
+
+
