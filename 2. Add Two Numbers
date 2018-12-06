@@ -11,5 +11,46 @@ Input: (2 -> 4 -> 3) + (5 -> 6 -> 4)
 Output: 7 -> 0 -> 8
 Explanation: 342 + 465 = 807.
 
+用两个非空的链表里面的数字组成数相加，返回能够组成和的数字的链表。
+
 ------------------------------------------------------solution---------------------------------------------------
 
+class Solution {
+public:
+    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+        int sum = 0;
+        ListNode *l3 = NULL;
+        ListNode **node = &l3;
+        while(l1!=NULL||l2!=NULL||sum>0)
+        {
+            if(l1!=NULL)
+            {
+                sum += l1->val;
+                l1 = l1->next;
+            }
+            if(l2!=NULL)
+            {
+                sum += l2->val;
+                l2 = l2->next;
+            }
+            (*node) = new ListNode(sum%10);
+            sum /= 10;
+            node = &((*node)->next);
+        }
+        return l3;
+    }
+};
+
+------------------------------------------------------analyse---------------------------------------------------
+
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+
+
+这道题目得先掌握链表的数据结构，val表示当前值，next只想下一个链表的值，这个类的方法可以看到构造一个返回链表的函数形参是指向两个链表的首地址结构指针，可以将两个链表传进来。  定义一个整形变量sum, 链表前面的数表示整个数的低位，因此从第一位开始相加并将两个链表同样位置的数的和赋值给L3链表相对应的值。
