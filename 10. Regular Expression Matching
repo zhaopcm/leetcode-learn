@@ -1,0 +1,153 @@
+------------------------------------------------------problem----------------------------------------------------------
+Given an input string (s) and a pattern (p), implement regular expression matching with support for '.' and '*'.
+
+'.' Matches any single character.
+'*' Matches zero or more of the preceding element.
+The matching should cover the entire input string (not partial).
+
+Note:
+
+s could be empty and contains only lowercase letters a-z.
+p could be empty and contains only lowercase letters a-z, and characters like . or *.
+Example 1:
+
+Input:
+s = "aa"
+p = "a"
+Output: false
+Explanation: "a" does not match the entire string "aa".
+Example 2:
+
+Input:
+s = "aa"
+p = "a*"
+Output: true
+Explanation: '*' means zero or more of the precedeng element, 'a'. Therefore, by repeating 'a' once, it becomes "aa".
+Example 3:
+
+Input:
+s = "ab"
+p = ".*"
+Output: true
+Explanation: ".*" means "zero or more (*) of any character (.)".
+Example 4:
+
+Input:
+s = "aab"
+p = "c*a*b"
+Output: true
+Explanation: c can be repeated 0 times, a can be repeated 1 time. Therefore it matches "aab".
+Example 5:
+
+Input:
+s = "mississippi"
+p = "mis*is*p*."
+Output: false
+
+----------------------------------------------------------analyse-------------------------------------------------------------
+
+写一个类似正则表达示‘.’‘*’的小算法。 ‘.’表示可以代指任意字符、 ‘*’表示该字符的任意个数 0~whatever
+
+从这到题可以清楚的看出各种算法在时间复杂度和空间复杂的是无法同时获取的，追求较高的运行速率必然会导致度对内存的占用
+
+以下讲到两个算法 我写的是基于递归调用实现的算法时间占用很长，但是占用内存比较小只有700多k, 因为递归本身会创建函数空间，有递归深度再迭代回来，
+该过程是很占用时间的。
+再这里占用leetcode 大佬的代码 运行时间8ms 但是极大的占用内存占用11.9M 的内存。
+
+
+----------------------------------------------------------solution--------------------------------------------------------------
+solution1:
+class Solution {
+public:
+    bool isMatch(string s, string p) {
+        if(s.size()==0) return p.size()==0;
+        if(p[1]!='*'){
+            if(s.empty()) return false;
+            return (p[0]==s[0]||p[0]=='.')&&isMatch(s.substr(1), p.substr(1));
+        }
+            
+        while(!s.empty()&&(p[0]==s[0]||p[0]=='.')){
+            if(isMatch(s, p.substr(2))) return true;
+            s.substr(1);
+        }
+        return isMatch(s, p.substr(2));
+    }
+};
+整个过程很简单：
+
+若p为空，若s也为空，返回true，反之返回false。
+
+- 若p的长度为1，若s长度也为1，且相同或是p为'.'则返回true，反之返回false。
+
+- 若p的第二个字符不为*，若此时s为空返回false，否则判断首字符是否匹配，且从各自的第二个字符开始调用递归函数匹配。
+
+- 若p的第二个字符为*，进行下列循环，条件是若s不为空且首字符匹配（包括p[0]为点），调用递归函数匹配s和去掉前两个字符的p
+（这样做的原因是假设此时的‘*’的作用是让前面的字符出现0次，验证是否匹配），若匹配返回true，否则s去掉首字母（因为此时首
+字母匹配了，我们可以去掉s的首字母，而p由于‘*’的作用，可以有任意个首字母，所以不需要去掉），继续进行循环。
+
+- 返回调用递归函数匹配s和去掉前两个字符的p的结果（这么做的原因是处理‘*’无法匹配的内容，比如s="ab", p="a*b"，直接进入
+while循环后，我们发现"ab"和"b"不匹配，所以s变成"b"，那么此时跳出循环后，就到最后的return来比较"b"和"b"了，返回true。
+再举个例子，比如s="", p="a*"，由于s为空，不会进入任何的if和while，只能到最后的return来比较了，返回true，正确）。
+
+solution2:
+
+class Solution {
+public:
+    bool isMatch(string s, string p) {
+        int sLen = s.length();
+        int pLen = p.length();
+
+        vector<vector<int>> map(sLen + 1, vector<int>(pLen + 1, -1));
+
+        int ret = internalIsMatchWrapper(s, p, 0, 0, map);
+
+        return ret == 1;
+    }
+
+    int internalIsMatchWrapper(string &s, string &p, int m, int n, vector<vector<int>> &map) {
+        if (map[m][n] != -1) {
+            return map[m][n];
+        }
+
+        int ret = internalIsMatch(s, p, m, n, map);
+        map[m][n] = ret;
+
+        return ret;
+    }
+
+
+    int internalIsMatch(string &s, string &p, int m, int n, vector<vector<int>> &map) {
+        if (n == p.length()) {
+            return m == s.length();
+        }
+
+        bool nextIsStar = false;
+        if (n + 1 < p.length()) {
+            nextIsStar = p[n + 1] == '*';
+        }
+
+        char pChar = p[n];
+
+        if (!nextIsStar && m != s.length() && (pChar == '.' || s[m] == pChar)) {
+            return internalIsMatchWrapper(s, p, m + 1, n + 1, map);
+        } else if (nextIsStar) {
+            int i = m - 1;
+            do {
+                i++;
+
+                if (internalIsMatchWrapper(s, p, i, n + 2, map)) {
+                    return 1;
+                }
+
+            } while (i != s.length() && (pChar == '.' || s[i] == pChar));
+        }
+
+        return 0;
+    }
+};
+
+这个方法就十分巧妙定义了一个二维的向量图。但是极大占用内存。
+
+一开始将图的所有元素都置为-1 ，逐个匹配两个字符串最终匹配成功则则将map[m][n]置为1，传值给ret，最终类方法得到 boolean 的值为 ret==1.
+
+建议看不懂算法的同学用编辑器调试一下该代码，就能理解整个图的值的变化过程从而理解程序了。
